@@ -1,6 +1,7 @@
 package cn.edu.sustech.cs209.chatting.client;
 
 import cn.edu.sustech.cs209.chatting.common.Message;
+import cn.edu.sustech.cs209.chatting.common.UserList;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -40,6 +41,10 @@ public class Controller implements Initializable {
                      if so, ask the user to change the username
              */
             username = input.get();
+            Connector connector = new Connector(username, this);
+            Thread x = new Thread(connector);
+            x.start();
+
         } else {
             System.out.println("Invalid username " + input + ", exiting");
             Platform.exit();

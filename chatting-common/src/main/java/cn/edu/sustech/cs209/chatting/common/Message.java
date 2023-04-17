@@ -1,24 +1,24 @@
 package cn.edu.sustech.cs209.chatting.common;
 
-public class Message {
+import java.io.Serializable;
 
-    private Long timestamp;
-
+public class Message implements Serializable {
+    private MessageType messageType;
     private String sentBy;
 
     private String sendTo;
 
     private String data;
 
-    public Message(Long timestamp, String sentBy, String sendTo, String data) {
-        this.timestamp = timestamp;
+    public Message(MessageType messageType, String sentBy, String sendTo, String data) {
+        this.messageType = messageType;
         this.sentBy = sentBy;
         this.sendTo = sendTo;
         this.data = data;
     }
 
-    public Long getTimestamp() {
-        return timestamp;
+    public MessageType getMessageType() {
+        return messageType;
     }
 
     public String getSentBy() {
