@@ -1,6 +1,7 @@
 package cn.edu.sustech.cs209.chatting.common;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class UserList {
@@ -10,7 +11,19 @@ public class UserList {
     public static synchronized List<String> getUserList() {
         return UserList.userList;
     }
+
+    public static synchronized void setUserList(List<String> userList) {
+        UserList.userList = userList;
+    }
+
     public static synchronized void addUser(String username){
         UserList.userList.add(username);
+    }
+
+    public static synchronized String listString(){
+        String ret = Arrays.toString(userList.toArray());
+        ret = ret.replace("[", "");
+        ret = ret.replace("]", "");
+        return ret;
     }
 }

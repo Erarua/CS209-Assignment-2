@@ -2,16 +2,18 @@ package cn.edu.sustech.cs209.chatting.client;
 
 import cn.edu.sustech.cs209.chatting.common.Message;
 import cn.edu.sustech.cs209.chatting.common.MessageType;
+import cn.edu.sustech.cs209.chatting.common.UserList;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class Connector implements Runnable {
     public String username;
     private Socket socket;
-    private ObjectOutputStream outputStream;
+    private static ObjectOutputStream outputStream;
     private ObjectInputStream inputStream;
     private Controller controller;
 
@@ -25,6 +27,10 @@ public class Connector implements Runnable {
         try{
             while(socket.isConnected()) {
                 Message message = (Message) inputStream.readObject();
+                if(message.getMessageType() == MessageType.NOTIFICATION){
+                    UserList.setUserList(Arrays.asList(message.getData().split(", ")));
+                    System.out.println(UserList.getUserList());
+                }
             }
         } catch (ClassNotFoundException | IOException e){
             e.printStackTrace();
@@ -36,7 +42,7 @@ public class Connector implements Runnable {
         this.controller = controller;
         try{
             this.socket = new Socket("localhost", 8090);
-            this.outputStream = new ObjectOutputStream(this.socket.getOutputStream());
+            outputStream = new ObjectOutputStream(this.socket.getOutputStream());
             this.inputStream = new ObjectInputStream(this.socket.getInputStream());
         } catch (IOException e){
             e.printStackTrace();
@@ -46,5 +52,13 @@ public class Connector implements Runnable {
     public void connect() throws IOException {
         Message msg = new Message(MessageType.CONNECTED, this.username, "server", "hello");
         outputStream.writeObject(msg);
+    }
+
+    public static void send(Message message){
+        try {
+            outputStream.writeObject(message);
+        } catch (IOException e){
+            e.printStackTrace();
+        }
     }
 }

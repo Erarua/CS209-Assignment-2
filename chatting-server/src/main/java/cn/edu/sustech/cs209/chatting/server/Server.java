@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Server {
-    private Map<String, ClientService> clients;
+    private volatile Map<String, ClientService> clients;
     private final ServerSocket serverSocket;
 
     public Server(ServerSocket serverSocket) {
@@ -68,6 +68,11 @@ public class Server {
                                 clientMsg.getSentBy() + " " + clientMsg.getSendTo() + " " + clientMsg.getData());
                         UserList.addUser(this.username);
                         System.out.println(UserList.getUserList());
+                        System.out.println(UserList.listString());
+                        clients.put(this.username, this);
+                        clients.forEach((s, clientService) -> {
+                            clientService.sendUserList();
+                        });
                     }
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("Client No Connection!");
@@ -78,6 +83,16 @@ public class Server {
 
         public synchronized void sendFrom(String username) {
 
+        }
+
+        public void sendUserList(){
+            Message message = new Message(MessageType.NOTIFICATION,
+                    "server", this.username, UserList.listString());
+            try {
+                outputStream.writeObject(message);
+            } catch (IOException e){
+                e.printStackTrace();
+            }
         }
 
     }

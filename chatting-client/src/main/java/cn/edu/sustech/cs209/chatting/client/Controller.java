@@ -1,8 +1,12 @@
 package cn.edu.sustech.cs209.chatting.client;
 
+import cn.edu.sustech.cs209.chatting.common.Chat;
+import cn.edu.sustech.cs209.chatting.common.ChatType;
 import cn.edu.sustech.cs209.chatting.common.Message;
 import cn.edu.sustech.cs209.chatting.common.UserList;
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -14,15 +18,20 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 
 import java.net.URL;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Controller implements Initializable {
 
+    Map<String, Chat> chatWithName;
+
     @FXML
     ListView<Message> chatContentList;
+
+    @FXML
+    ListView<Chat> chatList;
+    @FXML
+    Label currentUsername;
 
     String username;
 
@@ -41,9 +50,11 @@ public class Controller implements Initializable {
                      if so, ask the user to change the username
              */
             username = input.get();
+            currentUsername.setText("Current User: " + username);
             Connector connector = new Connector(username, this);
             Thread x = new Thread(connector);
             x.start();
+            chatWithName = new HashMap<>();
 
         } else {
             System.out.println("Invalid username " + input + ", exiting");
@@ -51,6 +62,12 @@ public class Controller implements Initializable {
         }
 
         chatContentList.setCellFactory(new MessageCellFactory());
+        chatList.setCellFactory(new ChatCellFactory());
+        chatList.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    chatContentList.setItems(FXCollections.observableList(newValue.getMessageList()));
+                }
+        );
     }
 
     @FXML
@@ -61,7 +78,12 @@ public class Controller implements Initializable {
         ComboBox<String> userSel = new ComboBox<>();
 
         // FIXME: get the user list from server, the current user's name should be filtered out
-        userSel.getItems().addAll("Item 1", "Item 2", "Item 3");
+//        userSel.getItems().addAll("Item 1", "Item 2", "Item 3");
+        UserList.getUserList().forEach(s -> {
+            if(!Objects.equals(s, this.username)) {
+                userSel.getItems().add(s);
+            }
+        });
 
         Button okBtn = new Button("OK");
         okBtn.setOnAction(e -> {
@@ -77,7 +99,12 @@ public class Controller implements Initializable {
         stage.showAndWait();
 
         // TODO: if the current user already chatted with the selected user, just open the chat with that user
-        // TODO: otherwise, create a new chat item in the left panel, the title should be the selected user's name
+        // TODO: otherwise, create a new chat item in the left panel, the title should be the selected username
+        if((user.get() != null) && !chatWithName.containsKey(user.get())){
+            System.out.println(user.get());
+            Chat chat = new Chat(ChatType.PRIVATE, user.get());
+            chatList.getItems().add(chat);
+        }
     }
 
     /**
@@ -138,6 +165,31 @@ public class Controller implements Initializable {
                         wrapper.getChildren().addAll(nameLabel, msgLabel);
                         msgLabel.setPadding(new Insets(0, 0, 0, 20));
                     }
+
+                    setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                    setGraphic(wrapper);
+                }
+            };
+        }
+    }
+
+    private class ChatCellFactory implements Callback<ListView<Chat>, ListCell<Chat>> {
+
+        @Override
+        public ListCell<Chat> call(ListView<Chat> param) {
+            return new ListCell<Chat>() {
+                @Override
+                protected void updateItem(Chat chat, boolean empty) {
+                    super.updateItem(chat, empty);
+                    if (empty || Objects.isNull(chat)) {
+                        return;
+                    }
+                    HBox wrapper = new HBox();
+                    // TODO: member>=3
+                    Label chatNameLabel = new Label(chat.getChatName());
+                    chatNameLabel.setPrefSize(50, 20);
+                    wrapper.setAlignment(Pos.CENTER);
+                    wrapper.getChildren().add(chatNameLabel);
 
                     setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
                     setGraphic(wrapper);

@@ -32,4 +32,16 @@ public class Message implements Serializable {
     public String getData() {
         return data;
     }
+
+    public void setMessageType(MessageType messageType) {
+        this.messageType = messageType;
+    }
+
+    public void setSentBy(String sentBy) {
+        this.sentBy = sentBy;
+    }
+
+    public void setSendTo(String sendTo) {
+        this.sendTo = sendTo;
+    }
 }
