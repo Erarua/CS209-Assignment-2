@@ -31,6 +31,9 @@ public class Connector implements Runnable {
                     UserList.setUserList(Arrays.asList(message.getData().split(", ")));
                     System.out.println(UserList.getUserList());
                 }
+                else if(message.getMessageType() == MessageType.PRIVATE){
+                    this.controller.handleReceive(message);
+                }
             }
         } catch (ClassNotFoundException | IOException e){
             e.printStackTrace();

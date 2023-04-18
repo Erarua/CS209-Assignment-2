@@ -1,9 +1,6 @@
 package cn.edu.sustech.cs209.chatting.client;
 
-import cn.edu.sustech.cs209.chatting.common.Chat;
-import cn.edu.sustech.cs209.chatting.common.ChatType;
-import cn.edu.sustech.cs209.chatting.common.Message;
-import cn.edu.sustech.cs209.chatting.common.UserList;
+import cn.edu.sustech.cs209.chatting.common.*;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -23,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Controller implements Initializable {
 
-    Map<String, Chat> chatWithName;
+    Map<String, Integer> chatWithName;
 
     @FXML
     ListView<Message> chatContentList;
@@ -31,7 +28,12 @@ public class Controller implements Initializable {
     @FXML
     ListView<Chat> chatList;
     @FXML
+    TextArea inputArea;
+    @FXML
     Label currentUsername;
+
+    ChatType currentType;
+    String currentChatName;
 
     String username;
 
@@ -65,7 +67,15 @@ public class Controller implements Initializable {
         chatList.setCellFactory(new ChatCellFactory());
         chatList.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, newValue) -> {
-                    chatContentList.setItems(FXCollections.observableList(newValue.getMessageList()));
+//                    System.out.println("in");
+//                    System.out.println("old: " + oldValue.getMessageList().toString());
+//                    System.out.println("new: "+ newValue.getMessageList().toString());
+                    if(newValue != null) {
+                        chatContentList.setItems(FXCollections.observableList(newValue.getMessageList()));
+                        currentType = newValue.getChatType();
+                        currentChatName = newValue.getChatName();
+                        System.out.println(currentChatName);
+                    }
                 }
         );
     }
@@ -104,6 +114,9 @@ public class Controller implements Initializable {
             System.out.println(user.get());
             Chat chat = new Chat(ChatType.PRIVATE, user.get());
             chatList.getItems().add(chat);
+            chatWithName.put(user.get(), chatList.getItems().indexOf(chat));
+            chatList.getSelectionModel().select(chat);
+//            System.out.println("chatWithName: " + chatWithName.toString());
         }
     }
 
@@ -130,11 +143,44 @@ public class Controller implements Initializable {
     @FXML
     public void doSendMessage() {
         // TODO
+        if(!inputArea.getText().isEmpty() && currentType!=null){
+            if(currentType == ChatType.PRIVATE){
+                Message message = new Message(MessageType.PRIVATE,
+                        username, currentChatName, inputArea.getText());
+                Connector.send(message);
+//                System.out.println(message.toString());
+//                System.out.println(chatWithName.get(currentChatName));
+//                System.out.println(chatList.getItems().toString());
+                Chat chat = chatList.getItems().get(chatWithName.get(currentChatName));
+                chat.addMessage(message);
+                chatList.getItems().set(chatWithName.get(currentChatName), chat);
+                chatList.getSelectionModel().select(chatWithName.get(currentChatName));
+            }
+            inputArea.clear();
+        }
+    }
+
+    public void handleReceive(Message message){
+        if(message.getMessageType() == MessageType.PRIVATE){
+            if(chatWithName.containsKey(message.getSentBy())){
+                Chat chat = chatList.getItems().get(chatWithName.get(message.getSentBy()));
+                chat.addMessage(message);
+                chatList.getItems().set(chatWithName.get(message.getSentBy()), chat);
+            }
+            else{
+                Chat chat = new Chat(ChatType.PRIVATE, message.getSentBy());
+                chat.addMember(message.getSentBy());
+                chat.addMessage(message);
+                chatList.getItems().add(chat);
+                chatWithName.put(message.getSentBy(), chatList.getItems().indexOf(chat));
+            }
+        }
     }
 
     /**
      * You may change the cell factory if you changed the design of {@code Message} model.
-     * Hint: you may also define a cell factory for the chats displayed in the left panel, or simply override the toString method.
+     * Hint: you may also define a cell factory for the chats displayed in the left panel,
+     *          or simply override the toString method.
      */
     private class MessageCellFactory implements Callback<ListView<Message>, ListCell<Message>> {
         @Override
@@ -145,6 +191,8 @@ public class Controller implements Initializable {
                 public void updateItem(Message msg, boolean empty) {
                     super.updateItem(msg, empty);
                     if (empty || Objects.isNull(msg)) {
+                        setText(null);
+                        setGraphic(null);
                         return;
                     }
 
@@ -182,6 +230,8 @@ public class Controller implements Initializable {
                 protected void updateItem(Chat chat, boolean empty) {
                     super.updateItem(chat, empty);
                     if (empty || Objects.isNull(chat)) {
+                        setText(null);
+                        setGraphic(null);
                         return;
                     }
                     HBox wrapper = new HBox();

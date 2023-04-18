@@ -74,6 +74,9 @@ public class Server {
                             clientService.sendUserList();
                         });
                     }
+                    else if(clientMsg.getMessageType() == MessageType.PRIVATE){
+                        sendTo(clientMsg.getSendTo(), clientMsg);
+                    }
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("Client No Connection!");
                     break;
@@ -81,8 +84,16 @@ public class Server {
             }
         }
 
-        public synchronized void sendFrom(String username) {
+        public synchronized void sendTo(String username, Message message) throws IOException {
+            ClientService service;
+            if(clients.containsKey(username)){
+                service = clients.get(username);
+                service.send(message);
+            }
+        }
 
+        public synchronized void send(Message message) throws IOException{
+            outputStream.writeObject(message);
         }
 
         public void sendUserList(){

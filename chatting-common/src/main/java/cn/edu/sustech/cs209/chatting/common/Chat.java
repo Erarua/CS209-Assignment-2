@@ -43,4 +43,8 @@ public class Chat {
     public void addMessage(Message message){
         messageList.add(message);
     }
+
+    public void addMember(String member){
+        members.add(member);
+    }
 }
