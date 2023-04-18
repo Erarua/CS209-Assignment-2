@@ -11,6 +11,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
@@ -118,6 +119,9 @@ public class Controller implements Initializable {
             chatList.getSelectionModel().select(chat);
 //            System.out.println("chatWithName: " + chatWithName.toString());
         }
+        else if((user.get() != null) && chatWithName.containsKey(user.get())){
+            chatList.getSelectionModel().select(chatWithName.get(user.get()));
+        }
     }
 
     /**
@@ -132,6 +136,50 @@ public class Controller implements Initializable {
      */
     @FXML
     public void createGroupChat() {
+
+
+        Stage stage = new Stage();
+        ComboBox<String> userSel = new ComboBox<>();
+
+        UserList.getUserList().forEach(s -> {
+            if(!Objects.equals(s, this.username)) {
+                userSel.getItems().add(s);
+            }
+        });
+        Label selectedMembers = new Label(username);
+        selectedMembers.setAlignment(Pos.CENTER);
+        selectedMembers.setLayoutY(100);
+        selectedMembers.setWrapText(true);
+        selectedMembers.setMaxSize(400, 100);
+
+        AtomicReference<String> user = new AtomicReference<>();
+        List<String> selected = new ArrayList<>();
+
+        Button addBtn = new Button("Add");
+        addBtn.setOnAction(event -> {
+            user.set(userSel.getSelectionModel().getSelectedItem());
+            if(!selected.contains(user.get())) {
+                selectedMembers.setText(selectedMembers.getText() + "," + user.get());
+                selected.add(user.get());
+            }
+        });
+
+        Button okBtn = new Button("OK");
+
+        okBtn.setOnAction(event -> {
+            stage.close();
+        });
+
+
+        HBox box = new HBox(10);
+        VBox vBox = new VBox(10);
+        box.setAlignment(Pos.CENTER);
+        box.setPadding(new Insets(100, 200, 50, 200));
+        box.getChildren().addAll(userSel, addBtn, okBtn);
+        vBox.setAlignment(Pos.CENTER);
+        vBox.getChildren().addAll(box, selectedMembers);
+        stage.setScene(new Scene(vBox));
+        stage.showAndWait();
     }
 
     /**
@@ -158,23 +206,32 @@ public class Controller implements Initializable {
             }
             inputArea.clear();
         }
+        chatList.getSelectionModel().select(null);
+        chatList.getSelectionModel().select(chatWithName.get(currentChatName));
     }
 
     public void handleReceive(Message message){
-        if(message.getMessageType() == MessageType.PRIVATE){
-            if(chatWithName.containsKey(message.getSentBy())){
-                Chat chat = chatList.getItems().get(chatWithName.get(message.getSentBy()));
-                chat.addMessage(message);
-                chatList.getItems().set(chatWithName.get(message.getSentBy()), chat);
+        Platform.runLater(() -> {
+            if(message.getMessageType() == MessageType.PRIVATE){
+                if(chatWithName.containsKey(message.getSentBy())){
+                    Chat chat = chatList.getItems().get(chatWithName.get(message.getSentBy()));
+                    chat.addMessage(message);
+                    chatList.getItems().set(chatWithName.get(message.getSentBy()), chat);
+                    chatList.getSelectionModel().select(null);
+                    chatList.getSelectionModel().select(chatWithName.get(message.getSentBy()));
+                }
+                else{
+                    Chat chat = new Chat(ChatType.PRIVATE, message.getSentBy());
+                    chat.addMember(message.getSentBy());
+                    chat.addMessage(message);
+                    chatList.getItems().add(chat);
+                    chatWithName.put(message.getSentBy(), chatList.getItems().indexOf(chat));
+                    chatList.getSelectionModel().select(null);
+                    chatList.getSelectionModel().select(chat);
+                }
             }
-            else{
-                Chat chat = new Chat(ChatType.PRIVATE, message.getSentBy());
-                chat.addMember(message.getSentBy());
-                chat.addMessage(message);
-                chatList.getItems().add(chat);
-                chatWithName.put(message.getSentBy(), chatList.getItems().indexOf(chat));
-            }
-        }
+        });
+
     }
 
     /**
