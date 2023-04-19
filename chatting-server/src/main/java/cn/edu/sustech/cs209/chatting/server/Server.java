@@ -71,9 +71,7 @@ public class Server {
                         System.out.println(UserList.getUserList());
                         System.out.println(UserList.listString());
                         clients.put(this.username, this);
-                        clients.forEach((s, clientService) -> {
-                            clientService.sendUserList();
-                        });
+                        clients.forEach((s, clientService) -> clientService.sendUserList());
                     }
                     else if(clientMsg.getMessageType() == MessageType.PRIVATE){
                         sendTo(clientMsg.getSendTo(), clientMsg);
@@ -93,6 +91,9 @@ public class Server {
                     }
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("Client No Connection!");
+                    clients.remove(username);
+                    UserList.removeUser(username);
+                    clients.forEach((s, clientService) -> clientService.sendUserList());
                     break;
                 }
             }

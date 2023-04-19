@@ -20,6 +20,10 @@ public class UserList {
         UserList.userList.add(username);
     }
 
+    public static synchronized void removeUser(String username){
+        UserList.userList.remove(username);
+    }
+
     public static synchronized String listString(){
         String ret = Arrays.toString(userList.toArray());
         ret = ret.replace("[", "");

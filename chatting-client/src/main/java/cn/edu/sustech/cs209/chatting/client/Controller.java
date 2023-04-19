@@ -130,7 +130,8 @@ public class Controller implements Initializable {
      * You can select several users that will be joined in the group chat, including yourself.
      * <p>
      * The naming rule for group chats is similar to WeChat:
-     * If there are > 3 users: display the first three usernames, sorted in lexicographic order, then use ellipsis with the number of users, for example:
+     * If there are > 3 users: display the first three usernames, sorted in lexicographic order,
+     * then use ellipsis with the number of users, for example:
      * UserA, UserB, UserC... (10)
      * If there are <= 3 users: do not display the ellipsis, for example:
      * UserA, UserB (2)
@@ -161,8 +162,13 @@ public class Controller implements Initializable {
         addBtn.setOnAction(event -> {
             user.set(userSel.getSelectionModel().getSelectedItem());
             if(!selected.contains(user.get())) {
-                selectedMembers.setText(selectedMembers.getText() + "," + user.get());
                 selected.add(user.get());
+                selected.sort(String::compareToIgnoreCase);
+                selectedMembers.setText(
+                        Arrays.toString(selected.toArray())
+                                .replace("[", "")
+                                .replace("]", "")
+                );
             }
         });
 
@@ -187,7 +193,7 @@ public class Controller implements Initializable {
         if(!users.equals(username) && !chatWithName.containsKey(users)){
 //            System.out.println(users);
             Chat chat = new Chat(ChatType.GROUP, users);
-            chat.setMembers(Arrays.asList(users.split(",")));
+            chat.setMembers(selected);
             chatList.getItems().add(chat);
             chatWithName.put(users, chatList.getItems().indexOf(chat));
             chatList.getSelectionModel().select(chat);
@@ -354,7 +360,7 @@ public class Controller implements Initializable {
                         );
                     }
                     chatNameLabel.setWrapText(true);
-                    chatNameLabel.setPrefSize(50, 20);
+                    chatNameLabel.setPrefSize(150, 20);
                     wrapper.setAlignment(Pos.CENTER);
                     wrapper.getChildren().add(chatNameLabel);
 
