@@ -60,7 +60,7 @@ public class Controller implements Initializable {
             chatWithName = new HashMap<>();
 
         } else {
-            System.out.println("Invalid username " + input + ", exiting");
+//            System.out.println("Invalid username " + input + ", exiting");
             Platform.exit();
         }
 
@@ -68,14 +68,14 @@ public class Controller implements Initializable {
         chatList.setCellFactory(new ChatCellFactory());
         chatList.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, newValue) -> {
-//                    System.out.println("in");
-//                    System.out.println("old: " + oldValue.getMessageList().toString());
-//                    System.out.println("new: "+ newValue.getMessageList().toString());
+////                    System.out.println("in");
+////                    System.out.println("old: " + oldValue.getMessageList().toString());
+////                    System.out.println("new: "+ newValue.getMessageList().toString());
                     if(newValue != null) {
                         chatContentList.setItems(FXCollections.observableList(newValue.getMessageList()));
                         currentType = newValue.getChatType();
                         currentChatName = newValue.getChatName();
-                        System.out.println(currentChatName);
+//                        System.out.println(currentChatName);
                     }
                 }
         );
@@ -112,14 +112,15 @@ public class Controller implements Initializable {
         // TODO: if the current user already chatted with the selected user, just open the chat with that user
         // TODO: otherwise, create a new chat item in the left panel, the title should be the selected username
         if((user.get() != null) && !chatWithName.containsKey(user.get())){
-            System.out.println(user.get());
+//            System.out.println(user.get());
             Chat chat = new Chat(ChatType.PRIVATE, user.get());
             chatList.getItems().add(chat);
             chatWithName.put(user.get(), chatList.getItems().indexOf(chat));
             chatList.getSelectionModel().select(chat);
-//            System.out.println("chatWithName: " + chatWithName.toString());
+////            System.out.println("chatWithName: " + chatWithName.toString());
         }
         else if((user.get() != null) && chatWithName.containsKey(user.get())){
+            chatList.getSelectionModel().select(null);
             chatList.getSelectionModel().select(chatWithName.get(user.get()));
         }
     }
@@ -154,6 +155,7 @@ public class Controller implements Initializable {
 
         AtomicReference<String> user = new AtomicReference<>();
         List<String> selected = new ArrayList<>();
+        selected.add(username);
 
         Button addBtn = new Button("Add");
         addBtn.setOnAction(event -> {
@@ -180,6 +182,20 @@ public class Controller implements Initializable {
         vBox.getChildren().addAll(box, selectedMembers);
         stage.setScene(new Scene(vBox));
         stage.showAndWait();
+
+        final String users = selectedMembers.getText();
+        if(!users.equals(username) && !chatWithName.containsKey(users)){
+//            System.out.println(users);
+            Chat chat = new Chat(ChatType.GROUP, users);
+            chat.setMembers(Arrays.asList(users.split(",")));
+            chatList.getItems().add(chat);
+            chatWithName.put(users, chatList.getItems().indexOf(chat));
+            chatList.getSelectionModel().select(chat);
+        }
+        else if(!users.equals(username) && chatWithName.containsKey(users)){
+            chatList.getSelectionModel().select(null);
+            chatList.getSelectionModel().select(chatWithName.get(users));
+        }
     }
 
     /**
@@ -191,16 +207,30 @@ public class Controller implements Initializable {
     @FXML
     public void doSendMessage() {
         // TODO
-        if(!inputArea.getText().isEmpty() && currentType!=null){
+        if(!inputArea.getText().isEmpty() && chatList.getSelectionModel().getSelectedItem() != null){
             if(currentType == ChatType.PRIVATE){
                 Message message = new Message(MessageType.PRIVATE,
                         username, currentChatName, inputArea.getText());
                 Connector.send(message);
-//                System.out.println(message.toString());
-//                System.out.println(chatWithName.get(currentChatName));
-//                System.out.println(chatList.getItems().toString());
+////                System.out.println(message.toString());
+////                System.out.println(chatWithName.get(currentChatName));
+////                System.out.println(chatList.getItems().toString());
                 Chat chat = chatList.getItems().get(chatWithName.get(currentChatName));
                 chat.addMessage(message);
+                chatList.getItems().set(chatWithName.get(currentChatName), chat);
+                chatList.getSelectionModel().select(chatWithName.get(currentChatName));
+            }
+            else if(currentType == ChatType.GROUP){
+                String sentBy = currentChatName + ":::" + username;
+////                System.out.println(currentChatName);
+                Chat chat = chatList.getItems().get(chatWithName.get(currentChatName));
+                String sendTo = chat.memberString();
+                Message message = new Message(MessageType.GROUP,
+                        sentBy, sendTo, inputArea.getText());
+//                System.out.println("to: " + message.getSendTo());
+                Connector.send(message);
+                chat.addMessage(new Message(MessageType.GROUP,
+                        username, sendTo, inputArea.getText()));
                 chatList.getItems().set(chatWithName.get(currentChatName), chat);
                 chatList.getSelectionModel().select(chatWithName.get(currentChatName));
             }
@@ -211,6 +241,7 @@ public class Controller implements Initializable {
     }
 
     public void handleReceive(Message message){
+//        System.out.println(message);
         Platform.runLater(() -> {
             if(message.getMessageType() == MessageType.PRIVATE){
                 if(chatWithName.containsKey(message.getSentBy())){
@@ -226,6 +257,29 @@ public class Controller implements Initializable {
                     chat.addMessage(message);
                     chatList.getItems().add(chat);
                     chatWithName.put(message.getSentBy(), chatList.getItems().indexOf(chat));
+                    chatList.getSelectionModel().select(null);
+                    chatList.getSelectionModel().select(chat);
+                }
+            }
+            else if(message.getMessageType() == MessageType.GROUP){
+//                System.out.println(message);
+                String groupName = message.getSentBy().split(":::")[0];
+                String senderName = message.getSentBy().split(":::")[1];
+                message.setSentBy(senderName);
+                if(chatWithName.containsKey(groupName)){
+                    Chat chat = chatList.getItems().get(chatWithName.get(groupName));
+                    chat.setMembers(Arrays.asList(message.getSendTo().split(", ")));
+                    chat.addMessage(message);
+                    chatList.getItems().set(chatWithName.get(groupName), chat);
+                    chatList.getSelectionModel().select(null);
+                    chatList.getSelectionModel().select(chatWithName.get(groupName));
+                }
+                else{
+                    Chat chat = new Chat(ChatType.GROUP, groupName);
+                    chat.setMembers(Arrays.asList(message.getSendTo().split(", ")));
+                    chat.addMessage(message);
+                    chatList.getItems().add(chat);
+                    chatWithName.put(groupName, chatList.getItems().indexOf(chat));
                     chatList.getSelectionModel().select(null);
                     chatList.getSelectionModel().select(chat);
                 }
@@ -294,6 +348,12 @@ public class Controller implements Initializable {
                     HBox wrapper = new HBox();
                     // TODO: member>=3
                     Label chatNameLabel = new Label(chat.getChatName());
+                    if(chat.getMembers().size() > 3){
+                        chatNameLabel.setText(
+                                chat.getThree() + "..." + "(" + chat.getMembers().size() + ")"
+                        );
+                    }
+                    chatNameLabel.setWrapText(true);
                     chatNameLabel.setPrefSize(50, 20);
                     wrapper.setAlignment(Pos.CENTER);
                     wrapper.getChildren().add(chatNameLabel);

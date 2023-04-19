@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,19 @@ public class Server {
                     }
                     else if(clientMsg.getMessageType() == MessageType.PRIVATE){
                         sendTo(clientMsg.getSendTo(), clientMsg);
+                    }
+                    else if(clientMsg.getMessageType() == MessageType.GROUP){
+                        String members = clientMsg.getSendTo();
+                        List<String> toSend = Arrays.asList(members.split(", "));
+                        toSend.forEach(s -> {
+                            if(!s.equals(this.username)){
+                                try {
+                                    sendTo(s, clientMsg);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
                     }
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("Client No Connection!");

@@ -34,6 +34,9 @@ public class Connector implements Runnable {
                 else if(message.getMessageType() == MessageType.PRIVATE){
                     this.controller.handleReceive(message);
                 }
+                else if(message.getMessageType() == MessageType.GROUP){
+                    this.controller.handleReceive(message);
+                }
             }
         } catch (ClassNotFoundException | IOException e){
             e.printStackTrace();
