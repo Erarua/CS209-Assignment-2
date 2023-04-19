@@ -17,6 +17,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -51,6 +55,23 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
+        try {
+            Socket socket = new Socket("localhost", 8090);
+            ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+            outputStream.writeObject(new Message(MessageType.USER, "client", "server", "userList"));
+            Message message;
+            if((message = (Message) inputStream.readObject()) != null){
+                UserList.setUserList(Arrays.asList(message.getData().split(", ")));
+                System.out.println("list: " + UserList.getUserList());
+                outputStream.close();
+                inputStream.close();
+                socket.close();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
         Dialog<String> dialog = new TextInputDialog();
         dialog.setTitle("Login");
         dialog.setHeaderText(null);
@@ -63,6 +84,14 @@ public class Controller implements Initializable {
                      if so, ask the user to change the username
              */
             username = input.get();
+            if(UserList.getUserList().contains(username)){
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setContentText("Your username has been used!");
+                alert.showAndWait();
+                initialize(url, resourceBundle);
+                return;
+            }
             currentUsername.setText("Current User: " + username);
             Connector connector = new Connector(username, this);
             Thread x = new Thread(connector);

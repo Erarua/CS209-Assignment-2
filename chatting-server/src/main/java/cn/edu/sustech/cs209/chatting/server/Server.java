@@ -73,6 +73,9 @@ public class Server {
                         clients.put(this.username, this);
                         clients.forEach((s, clientService) -> clientService.sendUserList());
                     }
+                    else if(clientMsg.getMessageType() == MessageType.USER){
+                        sendUserList();
+                    }
                     else if(clientMsg.getMessageType() == MessageType.PRIVATE){
                         sendTo(clientMsg.getSendTo(), clientMsg);
                     }
