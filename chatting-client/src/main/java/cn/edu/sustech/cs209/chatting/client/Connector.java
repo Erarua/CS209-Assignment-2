@@ -29,6 +29,7 @@ public class Connector implements Runnable {
                 Message message = (Message) inputStream.readObject();
                 if(message.getMessageType() == MessageType.NOTIFICATION){
                     UserList.setUserList(Arrays.asList(message.getData().split(", ")));
+                    this.controller.setCurrentOnlineCnt();
                     System.out.println(UserList.getUserList());
                 }
                 else if(message.getMessageType() == MessageType.PRIVATE){

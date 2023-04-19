@@ -4,12 +4,14 @@ import cn.edu.sustech.cs209.chatting.common.*;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -32,6 +34,14 @@ public class Controller implements Initializable {
     TextArea inputArea;
     @FXML
     Label currentUsername;
+    @FXML
+    ComboBox<String> emoji;
+    @FXML
+    Button emojiAdd;
+    @FXML
+    Label currentOnlineCnt;
+
+    AtomicReference<String> selectedEmoji = new AtomicReference<>();
 
     ChatType currentType;
     String currentChatName;
@@ -79,6 +89,19 @@ public class Controller implements Initializable {
                     }
                 }
         );
+
+//        emoji = new ComboBox<>();
+        emoji.getItems().add("\uD83D\uDE00"); //😀
+        emoji.getItems().add("\uD83D\uDE02"); //😂
+        emoji.getItems().add("\uD83D\uDE05"); //😅
+        emoji.getItems().add("\uD83D\uDE0D"); //😍
+    }
+
+    public void doEmojiAdd() {
+        selectedEmoji.set(emoji.getSelectionModel().getSelectedItem());
+        if(selectedEmoji.get() != null){
+            inputArea.setText(inputArea.getText() + selectedEmoji.get());
+        }
     }
 
     @FXML
@@ -292,6 +315,24 @@ public class Controller implements Initializable {
             }
         });
 
+    }
+
+    public void setCurrentOnlineCnt(){
+        Platform.runLater(() -> currentOnlineCnt.setText(
+                "Current Online Count: " + UserList.getUserList().size())
+        );
+    }
+
+    public void doOnlineShow() {
+        Stage stage = new Stage();
+        ListView<String> onlineUsers = new ListView<>();
+        onlineUsers.getItems().setAll(UserList.getUserList());
+        onlineUsers.setPrefSize(400, 100);
+        VBox vBox = new VBox(10);
+        vBox.getChildren().add(onlineUsers);
+        vBox.setAlignment(Pos.CENTER);
+        stage.setScene(new Scene(vBox));
+        stage.showAndWait();
     }
 
     /**
