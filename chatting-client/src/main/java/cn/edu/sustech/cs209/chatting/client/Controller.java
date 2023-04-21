@@ -126,6 +126,22 @@ public class Controller implements Initializable {
         emoji.getItems().add("\uD83D\uDE0D"); //😍
     }
 
+    public void onServerClose(){
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Server is closed");
+            ButtonType buttonTypeOne = new ButtonType("OK");
+
+            alert.getButtonTypes().setAll(buttonTypeOne);
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == buttonTypeOne){
+                Platform.exit();
+            }
+
+        });
+    }
+
     public void doEmojiAdd() {
         selectedEmoji.set(emoji.getSelectionModel().getSelectedItem());
         if(selectedEmoji.get() != null){

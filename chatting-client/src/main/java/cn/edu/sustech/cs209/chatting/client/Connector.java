@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Arrays;
 
 public class Connector implements Runnable {
@@ -40,6 +41,7 @@ public class Connector implements Runnable {
                 }
             }
         } catch (ClassNotFoundException | IOException e){
+            this.controller.onServerClose();
             e.printStackTrace();
         }
     }
