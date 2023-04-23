@@ -69,7 +69,8 @@ public class Controller implements Initializable {
                 socket.close();
             }
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            onServerClose();
+            return;
         }
 
         Dialog<String> dialog = new TextInputDialog();
