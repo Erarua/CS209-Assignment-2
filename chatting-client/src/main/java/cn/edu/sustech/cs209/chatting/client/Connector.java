@@ -24,7 +24,7 @@ public class Connector implements Runnable {
             connect();
         } catch (IOException e){
             this.controller.onServerClose();
-            e.printStackTrace();
+            return;
         }
         try{
             while(socket.isConnected()) {
@@ -43,7 +43,7 @@ public class Connector implements Runnable {
             }
         } catch (ClassNotFoundException | IOException e){
             this.controller.onServerClose();
-            e.printStackTrace();
+            return;
         }
     }
 
@@ -56,7 +56,7 @@ public class Connector implements Runnable {
             this.inputStream = new ObjectInputStream(this.socket.getInputStream());
         } catch (IOException e){
             this.controller.onServerClose();
-            e.printStackTrace();
+            return;
         }
     }
 
