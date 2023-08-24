@@ -6,7 +6,7 @@
 **Chatting** is a simple online-chat application, based on JavaFX and Socket.
 In this assignment, you will need to implement a WeChat like program, but much simpler.
 
-## Quickstart
+## Quick-Start
 
 Click the [use template](https://github.com/hezean/chatting/generate) to create a fork of this template - to avoid potential plagiarism dispute,
 **please be sure that your repository is made _private_ before the deadline**.

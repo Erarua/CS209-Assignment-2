@@ -274,7 +274,7 @@ public class Controller implements Initializable {
     public void doSendMessage() {
         // TODO
         if (!inputArea.getText().isEmpty() && chatList.getSelectionModel().getSelectedItem() != null) {
-            if (currentType == ChatType.PRIVATE) {
+            if (currentType == ChatType.PRIVATE && UserList.getUserList().contains(currentChatName)) {
                 Message message = new Message(MessageType.PRIVATE,
                         username, currentChatName, inputArea.getText());
                 Connector.send(message);
